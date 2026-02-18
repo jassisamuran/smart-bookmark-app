@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { RealtimePostgresChangesPayload, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -43,11 +43,8 @@ export default function BookmarkApp({ user, initialBookmarks }: Props) {
       } = await supabase.auth.getSession();
 
       if (!session) {
-        console.log("No session yet");
         return;
       }
-
-      console.log("Session ready:", session.user.id);
 
       channel = supabase
         .channel(`bookmarks-${session.user.id}`)
@@ -60,7 +57,7 @@ export default function BookmarkApp({ user, initialBookmarks }: Props) {
             table: "bookmarks",
             filter: `user_id=eq.${session.user.id}`,
           },
-          (payload) => {
+          (payload: RealtimePostgresChangesPayload<Bookmark>) => {
             if (payload.eventType === "INSERT") {
               const newBookmark = payload.new as Bookmark;
 
